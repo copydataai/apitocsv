@@ -1,6 +1,6 @@
 from requests import get
-from csv import DictWriter
-from json import load
+import csv
+import json
 def option():
     """Params that the user wants."""
     results = int(input('How many users do you want? ='))
@@ -16,33 +16,38 @@ def option():
     }
     request(**context)
 
-
 def request(results, gender):
     """Request and params from users."""
     print(results, gender)
     URL = 'https://randomuser.me/api/'
     params = {'results': results, 'gender': gender}
     response = get(URL, params=params)
-    value = load(response.json)
-    if_values(value)
+    value = json.loads(response.text) 
+    csv_writer(value)
     
-def if_values(value):
-    print(type(value))
-    print(value)
+def csv_writer(dictionary):
+    """Define values."""
+    users = list(dictionary['results'])
+    with open('users.csv', 'w', encoding='utf-8') as csvfile:
+        fieldnames = ['name complete', 'email', 'country', 'date', 'cellphone']
+        user_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        user_writer.writeheader()
+        for user in users:
+            name = user.get('name')
+            name = f"{name['first']} {name['last']}"
+            country = user.get('location')
+            country = country.get('country')
+            email = user.get('email')
+            date = user.get('dob')
+            date = date.get('date')
+            cell = user.get('cell')
 
-
-def writer_csv(users):
-    """Write new users."""
-    with open('users.csv', 'w') as csv_file:
-        fieldnames = ['name complete', 'email', 'country', 'date', 'cell']
-        user_writer = DictWriter(csvfile, fieldnames=fieldnames)
-
-        user_writer.writerheader()
-        user_writer.writerow(user)
-
-
-def main():
-    option()
+            user_writer.writerow({
+                'name complete': name, 
+                'country': country, 
+                'email': email, 
+                'date': date, 
+                'cellphone':cell})
 
 if __name__ == '__main__':
-    main()
+    option()
